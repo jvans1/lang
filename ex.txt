@@ -1,0 +1,12 @@
+typedef foo(Int, Int) => Int
+def foo(a, b)
+
+end
+
+typedef bar(Int, Int) => Int
+def bar(a, b)
+
+end
+
+tydef >>=(Int, Int) => Int
+fndef >>=(a, b)
