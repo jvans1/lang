@@ -1,0 +1,5 @@
+tydef hello() => Integer
+fndef hello(a) 
+  5
+end
+tydef foo() => Integer\nfndef foo = 3\nend

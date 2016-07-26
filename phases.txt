@@ -1,0 +1,35 @@
+Lexical Analysis ->
+  data Expr =
+    Function String [Type] Type [Expr] Expr
+    | Assignment Expr Expr
+    | Call String [Expr]
+    | Var String
+    | Digit Integer deriving (Show, Eq)
+Semantic Analysis
+  Construct Scopes ->
+  Check Scopes     ->
+
+  Resolve Types    ->
+  Check Types      -> 
+
+Generate Code ->
+  data Variable = Variable Type Text
+
+  data Instruction = FnCall Text [Arguments]
+  data Scope = Scope {
+    variables :: [Variable]
+    , functions :: Map Text Function
+  }
+
+  data Function = Function {
+      name :: Text
+      , varArbs :: [Variable]
+      , instructions :: [Instruction]
+      , scope  :: Scope
+  }
+  data Program = Program
+    {
+      functions :: [Function]
+      , main    :: Function
+    }
+  data Function

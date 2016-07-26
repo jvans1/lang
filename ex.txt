@@ -1,12 +1,18 @@
-typedef foo(Int, Int) => Int
-def foo(a, b)
+tydef foo(Int, Int) => Int
+fndef foo(a, b)
 
 end
 
-typedef bar(Int, Int) => Int
-def bar(a, b)
+tydef bar(Int, Int) => Int
+fndef bar(a, b)
 
 end
 
 tydef >>=(Int, Int) => Int
 fndef >>=(a, b)
+  Types   -> Type | Type => Types
+  Type    -> Integer
+  Func    -> Params = | Factor
+  Params  -> ident | ident Params
+  Term    -> Factor * Term | Term / Expr | Factor < Expr | Factor
+  Factor  -> Ident | Digit | (Expr) | Ident OptParams
