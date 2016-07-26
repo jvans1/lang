@@ -1,14 +1,16 @@
 module CodeGeneration.CodeGeneration where
 import SemanticAnalysis.TypeResolution
+import SemanticAnalysis.Types(Functions(..))
 import Parser.Types(Type(..), Expr(Digit, Call))
+import SemanticAnalysis.Types(Program(..), Function(..))
 import Data.HashMap.Lazy(HashMap, elems)
 import qualified Data.HashMap.Lazy as Map
 
-generate :: HashMap String TypedExpr -> Either a String
-generate xs = return . mconcat . elems $ Map.map toString xs
+generate :: Program -> Either a String
+generate xs = return . mconcat . elems $ Map.map toString (functions xs)
 
-toString :: TypedExpr -> String
-toString (Function name retType varArgs body) = typeToC retType ++ " " ++ name ++ "()\n{" ++ "return " ++ bodyToC body ++ ";" ++ "\n}"
+toString :: Function -> String
+toString (Function name vars args inst) =  typeToC retType ++ " " ++ name ++ "()\n{" ++ "return " ++ bodyToC body ++ ";" ++ "\n}"
 toString _ = error "Need to finish this definition"
 
 typeToC :: Type -> String

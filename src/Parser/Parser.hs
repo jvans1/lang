@@ -5,6 +5,7 @@ import Parser.Types
 import Data.Functor((<$))
 import Control.Applicative((*>), (<*))
 import Data.HashMap.Lazy(HashMap)
+import Text.Parsec.Language(emptyDef)
 import qualified Text.Parsec as P
 import Control.Applicative((<|>))
 import Text.Parsec.Token(GenLanguageDef(..), GenTokenParser(..), makeTokenParser)
