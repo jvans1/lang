@@ -15,10 +15,8 @@ cabal-version:       >=1.10
 
 library
   hs-source-dirs:      src
-  exposed-modules:     CodeGeneration.CCompiler
-                      , CodeGeneration.CodeGeneration
-                      , CodeGeneration.Types
-                      , Store
+  exposed-modules:     
+                        Store
                       , Parser.Types
                       , Parser.Parser
                       , SemanticAnalysis.Types
