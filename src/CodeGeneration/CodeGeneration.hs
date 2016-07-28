@@ -1,5 +1,6 @@
 module CodeGeneration.CodeGeneration where
 import SemanticAnalysis.TypeResolution
+import CodeGeneration.Types
 import SemanticAnalysis.Types(Functions(..))
 import Parser.Types(Type(..), Expr(Digit, Call))
 import SemanticAnalysis.Types(Program(..), Function(..))
@@ -7,10 +8,25 @@ import Data.HashMap.Lazy(HashMap, elems)
 import qualified Data.HashMap.Lazy as Map
 
 generate :: Program -> Either a String
-generate xs = return . mconcat . elems $ Map.map toString (functions xs)
+generate xs = error "not used"
+
+generate' :: Program -> [CFunction]
+generate' (Program fns) = fmap go fns
+  where
+    go :: Function -> CFunction
+    go (Function name []) = CFunction Nothing [] name
+    go (Function name a) = CFunction (Just a) (argsIn a) name
+
+argsIn :: [Instruction] -> [(Text, Type)]
+argsIn xs = concat $ fmap argsIn' [] xs
+  where
+    argsIn' :: Instruction -> [(Text, Type)]
+    argsIn' (FnCall _ inst1 inst2) = argsIn' inst1 ++ argsIn' inst2
+    argsIn' (Argument var ty)      = (var, ty)
+
 
 toString :: Function -> String
-toString (Function name vars args inst) =  typeToC retType ++ " " ++ name ++ "()\n{" ++ "return " ++ bodyToC body ++ ";" ++ "\n}"
+toString (Function name vars) = error "toString "  --typeToC retType ++ " " ++ name ++ "()\n{" ++ "return " ++ bodyToC body ++ ";" ++ "\n}"
 toString _ = error "Need to finish this definition"
 
 typeToC :: Type -> String

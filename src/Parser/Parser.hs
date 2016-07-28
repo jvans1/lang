@@ -9,7 +9,7 @@ import Text.Parsec.Language(emptyDef)
 import qualified Text.Parsec as P
 import Control.Applicative((<|>))
 import Text.Parsec.Token(GenLanguageDef(..), GenTokenParser(..), makeTokenParser)
-{- 
+{-
   Grammar
   Expr       -> Def | Call | Assignment | Term
   Assignment -> Var = Expr
@@ -27,9 +27,9 @@ factor = try functionCall <|> term
 
 term :: Parsec String () Expr
 term = variable <|> digit
- 
+
 addition :: Parsec String () Expr
-addition = do 
+addition = do
   expr1 <- term
   spaces
   symbol lexer "+"

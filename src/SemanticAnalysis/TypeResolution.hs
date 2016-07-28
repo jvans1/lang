@@ -12,16 +12,16 @@ resolve :: HashMap String Expr -> Either a Program
 resolve expr = return . Program .  stringKeysToText $ Map.mapWithKey evalTop expr
   where
     evalTop :: String -> P.Expr -> Function
-    evalTop name (P.Function _ argTypes retType args body) = Function (pack name) (error "arguments here") (argVars argTypes args) (error "body here")
+    evalTop name (P.Function _ argTypes retType args body) = (error "function more stuff")
     stringKeysToText :: HashMap String a -> HashMap Text a
     stringKeysToText = fromList . fmap (\(x, y) -> (pack x, y)) . toList
 
 
-argVars :: [Type] -> [Expr] -> [Argument]
+argVars :: [Type] -> [Expr] -> [Instruction]
 argVars types vars = map mkArg (zip types vars)
   where
-    mkArg :: (Type, Expr) -> Argument
-    mkArg (t, Var varname)  = Argument t (pack varname)
+    mkArg :: (Type, Expr) -> Instruction
+    mkArg (t, Var varname)  = error "typeResolution line 24" --Argument t (pack varname)
     mkArg _ = error "non exhaustive pattern match in make arg"
   --TODO: While we can guarantee this is never hit,
   --hit, this still sucks we should represent this with the type system

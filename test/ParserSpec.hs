@@ -44,4 +44,4 @@ run = do
 
     it "allows functions to end in whitespace" $ do
       let result = parse "tydef hello() => Integer\nfndef boo()\n2  \nend"
-      result `shouldSucessfullyParseTo` (Function "hello" [] (Integer) [] (Digit 2) )
+      result `shouldSucessfullyParseTo` (Function "hello" [] (Integer) [] (Digit 2))

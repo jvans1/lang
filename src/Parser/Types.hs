@@ -7,4 +7,3 @@ data Expr =
   | Call String [Expr]
   | Var String
   | Digit Integer deriving (Show, Eq)
-

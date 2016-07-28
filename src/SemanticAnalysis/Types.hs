@@ -1,21 +1,16 @@
 {-# LANGUAGE DeriveFunctor #-}
 module SemanticAnalysis.Types where
 import Data.Text(Text)
-import Parser.Types
+import Types
 import Data.HashMap.Strict(HashMap)
-
-data Variable = Variable Type Text Instruction
-
-data Argument = Argument Type Text
-
-data Instruction = FnCall Text [Variable] | DataType Type
 
 data Function = Function {
   name :: Text
-  , variables :: HashMap Text Variable
-  , arguments :: [Argument]
-  , instructions :: [Instruction]
-}
+  , body :: [Instruction]
+} deriving (Show, Eq)
+
+data BinaryOp = Add deriving (Show, Eq)
+data Instruction = FnCall BinaryOp Instruction Instruction | Argument Text Type deriving (Show, Eq)
 
 data Functions a = Program {
   functions :: HashMap Text a
