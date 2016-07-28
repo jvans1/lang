@@ -1,0 +1,2 @@
+1. Make sure function name is same name as on type signature
+

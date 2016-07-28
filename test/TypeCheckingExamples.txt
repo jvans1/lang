@@ -1,0 +1,6 @@
+tydef foo(Integer, Integer) => Integer
+fndef foo(a, b)
+  "Hello"
+end
+
+

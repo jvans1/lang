@@ -19,6 +19,7 @@ library
   exposed-modules:     
                         Parser.Parser
                       , SemanticAnalysis.TypeResolution
+                      , SemanticAnalysis.TypeChecking
                       , Parser.Lexer
                       , Types
                       , Base
@@ -27,6 +28,7 @@ library
                       , unordered-containers >= 0.2.7 && < 0.3.0
                       , text >= 1.2.2 && < 1.3
                       , classy-prelude >= 0.12.0 && < 1.0
+                      , semigroups >= 0.18.0 && < 0.19
   default-language:    Haskell2010
 
 executable lang-exe

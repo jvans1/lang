@@ -11,8 +11,7 @@ run = do
                                               Right (Program fns) -> case lookup "main" fns of
                                                                         (Just fn) -> fn `shouldBe` res
                                                                         _ -> error "unsuccessful parsed to maybe"
-                                              _ -> error "unsuccessful parse"
-              
+                                              Left a -> error $ show a
   describe "parsing" $ do
     it "throws an error when a top level declaration is not a function" $ do
       let result = parse "1 + 2"
@@ -27,6 +26,10 @@ run = do
     it "should return digits" $ do
       let result = parse "tydef main() => Integer\nfndef main()\n123\nend"
       result `shouldSucessfullyParseTo` (Function "main" [] Integer [] (Digit 123))
+
+    it "allows string literals" $ do
+      let result = parse "tydef main() => String\nfndef main()\n\"hello world\"\nend"
+      result `shouldSucessfullyParseTo` (Function "main" [] String [] (StringLiteral "hello world"))
 
     it "parses variable assignments" $ do
       let result = parse "tydef main() => Integer\nfndef main()\n a = foo()\nend"
