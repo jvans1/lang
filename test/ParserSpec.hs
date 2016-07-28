@@ -1,8 +1,10 @@
 module ParserSpec where
 import Parser.Parser(parse)
+import Text.Parsec.Error(errorMessages, Message(..))
 import Base
 import Types
 import Test.Hspec
+
 run :: Spec
 run = do
   let shouldSucessfullyParseTo parsed res = case parsed of
@@ -12,6 +14,12 @@ run = do
                                               _ -> error "unsuccessful parse"
               
   describe "parsing" $ do
+    it "throws an error when a top level declaration is not a function" $ do
+      let result = parse "1 + 2"
+      case result of
+        Right a -> error $  "should not successfully parse to" ++ show a
+        Left _ -> True `shouldBe` True
+      
     it "should return variables" $ do
       let result = parse "tydef main() => Integer\nfndef main()\na\nend"
       result `shouldSucessfullyParseTo` (Function "main" [] Integer [] (Var "a"))
