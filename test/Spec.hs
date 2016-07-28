@@ -1,4 +1,5 @@
 import qualified ParserSpec
+import Base
 import qualified TypeResolutionSpec
 
 import Test.Hspec

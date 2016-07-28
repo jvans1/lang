@@ -1,4 +1,5 @@
 module Parser.Lexer(lexer) where
+import Base
 import Text.Parsec.Token(GenLanguageDef(..), GenTokenParser(..), makeTokenParser)
 import Data.Functor.Identity(Identity)
 import Text.Parsec.Language(emptyDef)

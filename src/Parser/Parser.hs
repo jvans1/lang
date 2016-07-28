@@ -1,10 +1,11 @@
+{-# LANGUAGE RecordWildCards #-}
 module Parser.Parser where
+import Base
 import Text.Parsec(try, alphaNum, char, oneOf, letter, Parsec, many1, count, sepBy1, manyTill, many, space, optionMaybe, string, sepBy, newline, spaces)
+import Types
 import Parser.Lexer(lexer)
-import Parser.Types
 import Data.Functor((<$))
 import Control.Applicative((*>), (<*))
-import Data.HashMap.Lazy(HashMap)
 import Text.Parsec.Language(emptyDef)
 import qualified Text.Parsec as P
 import Control.Applicative((<|>))
@@ -16,8 +17,16 @@ import Text.Parsec.Token(GenLanguageDef(..), GenTokenParser(..), makeTokenParser
   Term       -> Int | Var
 -}
 
-parse :: String -> Either P.ParseError [Expr]
-parse expr = P.parse (many1 expression) "" expr
+parse :: String -> Either P.ParseError Program
+parse expr = P.parse (storeFunctions <$> many1 expression) "" expr
+
+storeFunctions :: [Expr] -> Program
+storeFunctions = Program . foldl' storeFn empty
+  where
+    storeFn :: HashMap Text Expr -> Expr -> HashMap Text Expr
+    storeFn hmap fn@(Function {..}) = insert fnName fn hmap
+    storeFn hmap fn  =  error $ show fn
+
 
 expression :: Parsec String () Expr
 expression = try functionDeclaration <|> (try assignment) <|> factor
@@ -86,8 +95,8 @@ assignment = do
 digit :: Parsec String () Expr
 digit = Digit . read <$> many1 P.digit 
 
-ident :: Parsec String () String
-ident = identifier lexer
+ident :: Parsec String () Text
+ident = pack <$> identifier lexer
 
 variable :: Parsec String () Expr
 variable = Var <$> ident

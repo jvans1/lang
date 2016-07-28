@@ -15,18 +15,18 @@ cabal-version:       >=1.10
 
 library
   hs-source-dirs:      src
+  extensions: NoImplicitPrelude, OverloadedStrings
   exposed-modules:     
-                        Store
-                      , Parser.Types
-                      , Parser.Parser
-                      , SemanticAnalysis.Types
+                        Parser.Parser
                       , SemanticAnalysis.TypeResolution
                       , Parser.Lexer
                       , Types
+                      , Base
   build-depends:       base >= 4.7 && < 5
                       , parsec >= 3.1.11 && < 3.2.0
                       , unordered-containers >= 0.2.7 && < 0.3.0
                       , text >= 1.2.2 && < 1.3
+                      , classy-prelude >= 0.12.0 && < 1.0
   default-language:    Haskell2010
 
 executable lang-exe
@@ -41,7 +41,7 @@ test-suite lang-test
   type:                exitcode-stdio-1.0
   hs-source-dirs:      test
   main-is:             Spec.hs
-  extensions:          OverloadedStrings
+  extensions: NoImplicitPrelude, OverloadedStrings
   build-depends:       base
                      , lang
                      , hspec >= 2.2.3 && < 2.3.0
