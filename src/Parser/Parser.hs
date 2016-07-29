@@ -18,17 +18,11 @@ import Text.Parsec.Token(GenLanguageDef(..), GenTokenParser(..), makeTokenParser
   Term       -> Int | Var
 -}
 
-parse :: String -> Either P.ParseError Program
-parse expr = P.parse (storeFunctions <$> many1 parseTop) "" expr
+parse :: String -> Either P.ParseError [Expr]
+parse expr = P.parse parseTop "" expr
 
-storeFunctions :: [Function] -> Program
-storeFunctions = Program . foldl' storeFn empty
-  where
-    storeFn :: HashMap Text Function -> Function -> HashMap Text Function
-    storeFn hmap fn@(Function {..}) = insert fnName fn hmap
-
-parseTop :: Parsec String () Function
-parseTop = functionDeclaration
+parseTop :: Parsec String () [Expr]
+parseTop = many1 functionDeclaration
 
 expression :: Parsec String () Expr
 expression = (try assignment) <|> factor
@@ -52,14 +46,14 @@ functionCall = try namedFunction <|> operatorFunction
   where
     operatorFunction :: Parsec String () Expr
     operatorFunction = addition
-  
+
     namedFunction :: Parsec String () Expr
     namedFunction = do
       fnName <- ident
       fnArgs <- parens lexer $ commaSep lexer factor
       return (Call fnName fnArgs)
 
-functionDeclaration :: Parsec String () Function
+functionDeclaration :: Parsec String () Expr
 functionDeclaration = do
   reserved lexer "tydef"
   name <- ident
@@ -100,7 +94,7 @@ assignment = do
   return (Assignment var assigned)
 
 digit :: Parsec String () Expr
-digit = Digit . read <$> many1 P.digit 
+digit = Digit . read <$> many1 P.digit
 
 ident :: Parsec String () Text
 ident = pack <$> identifier lexer
