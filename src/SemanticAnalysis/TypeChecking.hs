@@ -5,9 +5,6 @@ import SemanticAnalysis.TypeResolution
 import Types
 import Base
 
-check :: TypedProgram -> Either Text TypedProgram
-check fns = error "check" -- typeCheck fns
-
 
 
 {- typeCheck :: HashMap Text TypedFunction -> Either Text (HashMap Text TypedFunction) -}

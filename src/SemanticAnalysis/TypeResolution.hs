@@ -1,15 +1,18 @@
 {-# LANGUAGE RecordWildCards #-}
-module SemanticAnalysis.TypeResolution(resolve) where
+module SemanticAnalysis.TypeResolution(typeChecker) where
+import Control.Monad.Reader(ask)
 import Data.Foldable(foldrM)
 import qualified Data.List.NonEmpty as NE
 import Types
 import Data.HashMap.Strict(mapWithKey)
 import Base hiding (mapWithKey)
 
-resolve :: [Expr] -> Either Text TypedProgram
-resolve fns = foldrM addExplicitTypes empty fns
+typeChecker :: TypeChecker Program
+typeChecker = do
+  fns <- ask
+  foldrM addExplicitTypes empty fns
 
-addExplicitTypes :: Expr -> TypedProgram -> Either Text TypedProgram
+addExplicitTypes :: Expr -> Program -> TypeChecker Program
 addExplicitTypes  Function{..} prgrm = do
   let (returnStatement, mlist) = NE.uncons fnbody
   returnStatementType <- assignType returnStatement
@@ -25,11 +28,11 @@ addExplicitTypes  Function{..} prgrm = do
          } prgrm
 addExplicitTypes  _ _ = error "invalid rep"
 
-fnBody :: Maybe (NonEmpty Expr) -> Either Text [TypedExpr]
+fnBody :: Maybe (NonEmpty Expr) -> TypeChecker [TypedExpr]
 fnBody (Just a) = mapM assignType $ NE.toList a
 fnBody Nothing  = return []
 
-assignType :: Expr -> Either Text TypedExpr
+assignType :: Expr -> TypeChecker TypedExpr
 assignType ex@(Assignment expr1 expr2 ) = return (typeOf expr2, ex)
 assignType ex@(Call _ []) = error "typed expression not finished"
 

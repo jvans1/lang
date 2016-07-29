@@ -29,11 +29,11 @@ data Expr =
 data TypeError = MisMatch deriving (Show, Eq)
 
 newtype TypeChecker a = TypeChecker {
-  runTypeChecker :: ExceptT TypeError (Reader [Expr]) a
+  _runTypeChecker :: ExceptT TypeError (Reader [Expr]) a
 } deriving (Functor, Applicative, Monad, MonadReader [Expr], MonadError TypeError)
 
-typeCheck :: [Expr] -> TypeChecker TypedProgram -> Either TypeError TypedProgram
-typeCheck exprs = (flip runReader exprs) . runExceptT . runTypeChecker
+runTypeChecker :: [Expr] -> TypeChecker Program -> Either TypeError Program
+runTypeChecker exprs = (flip runReader exprs) . runExceptT . _runTypeChecker
 
 
 data TypedFunction = TypedFunction {
@@ -47,4 +47,4 @@ data TypedFunction = TypedFunction {
 
 type TypedExpr = (Type, Expr)
 
-type TypedProgram = HashMap Text TypedFunction
+type Program = HashMap Text TypedFunction
