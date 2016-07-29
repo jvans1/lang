@@ -38,16 +38,21 @@ fnBody (Just a) = mapM assignType $ NE.toList a
 fnBody Nothing  = return []
 
 assignType :: Expr -> TypeChecker TypedExpr
-assignType ex@(Assignment expr1 expr2 _) = do
-  ttype <- typeOf expr2
-  return (ttype, ex)
-assignType ex@(Function{..})             = return (retType, ex)
-assignType ex@(Lit (StringLit _) _)      = return (String, ex)
-assignType ex@(Lit (Digit _) _)          = return (Integer, ex)
-assignType ex@(Var _ _)                  = return (Integer, ex)
-assignType ex@(Call name _ _)            = do 
-  ttype <- typeOfFn name ex
-  return (ttype, ex)
+assignType ex = typeOf ex >>= return . (flip (,) ex)
+
+
+isNamed :: Text -> Expr -> TypeChecker Bool
+isNamed name Function{..} = return $ fnName == name
+--TODO: Account for invalid top level declarations here and short circuit
+--If we have a TLD that is not a function this will fail 
+
+typeOf :: Expr -> TypeChecker Type
+typeOf ex@(Assignment expr1 expr2 _) = typeOf expr2
+typeOf ex@(Function{..})             = return retType
+typeOf ex@(Lit (StringLit _) _)      = return String
+typeOf ex@(Lit (Digit _) _)          = return Integer
+typeOf ex@(Var _ _)                  = return Integer
+typeOf ex@(Call name _ _)            = typeOfFn name ex
 
 typeOfFn :: Text -> Expr -> TypeChecker Type
 typeOfFn name ex = do
@@ -57,18 +62,3 @@ typeOfFn name ex = do
     Just fn -> typeOf fn
     Nothing -> throwError $ UnknownFunction name (location ex)
 
-
-isNamed :: Text -> Expr -> TypeChecker Bool
-isNamed name Function{..} = return $ fnName == name
---TODO: I don't like this because we don't actually need to add the fn type
---but we want to reuse the pattern matching that short circuits when a
---top level declation is not a function
-
-
-typeOf :: Expr -> TypeChecker Type
-typeOf ex@(Assignment expr1 expr2 _) = typeOf expr2
-typeOf ex@(Function{..})             = return retType
-typeOf ex@(Lit (StringLit _) _)      = return String
-typeOf ex@(Lit (Digit _) _)          = return Integer
-typeOf ex@(Var _ _)                  = return Integer
-typeOf ex@(Call name _ _)            = typeOfFn name ex
