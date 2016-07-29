@@ -1,4 +1,9 @@
+tydef bar() => Integer
+fndef bar()
+  1
+end
+
 tydef hi() => Integer
 fndef hi()
-  1 + 2
+  bar()
 end

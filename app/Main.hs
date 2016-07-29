@@ -14,4 +14,5 @@ main = do
     Right program -> case runTypeChecker program typeChecker of
                         Right a -> print a
                         Left (NakedExpression lineno expr)-> putStrLn $ lineno ++ "Naked Expression at top level: " ++ expr
+                        Left (UnknownFunction x lineno)-> putStrLn $ "Unknown function invocation on line: " ++ lineno ++ "; '" ++ x ++ "()' is not defined."
     Left failure -> print failure

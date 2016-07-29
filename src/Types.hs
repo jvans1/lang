@@ -45,7 +45,7 @@ location = tshow . sourceLoc . lexeme
 source :: Expr -> Text
 source = sourceCode . lexeme 
 
-data TypeError = MisMatch | NakedExpression Text Text | UnknownFunction Text deriving (Show, Eq)
+data TypeError = MisMatch | NakedExpression Text Text | UnknownFunction Text Text deriving (Show, Eq)
 
 newtype TypeChecker a = TypeChecker {
   _runTypeChecker :: ExceptT TypeError (Reader [Expr]) a
