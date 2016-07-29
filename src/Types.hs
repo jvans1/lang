@@ -1,4 +1,5 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE RecordWildCards #-}
 module Types where
 import Data.Text
 import Control.Monad.Reader
@@ -16,17 +17,35 @@ data Expr =
       , retType :: Type 
       , fnArgs :: [Expr] 
       , fnbody :: NonEmpty Expr
+      , _lexeme :: Lexeme
     }
-  | Assignment Expr Expr
-  | Call Text [Expr]
-  | Var Text
-  | StringLiteral Text
-  | Digit Integer deriving (Show, Eq)
+  | Assignment Expr Expr Lexeme
+  | Call Text [Expr] Lexeme
+  | Var Text Lexeme
+  | Lit Lit Lexeme deriving (Show, Eq)
 
---Resolve Types
---
+data Lit = StringLit Text | Digit Integer deriving (Show, Eq)
 
-data TypeError = MisMatch deriving (Show, Eq)
+data Lexeme = Lexeme {
+    sourceLoc :: Int
+  , sourceCode :: Text 
+} deriving (Show, Eq)
+
+
+lexeme :: Expr -> Lexeme
+lexeme Function {..}        = _lexeme
+lexeme (Assignment _ _ lex) = lex
+lexeme (Call _ _ lex)       = lex
+lexeme (Var _ lex)          = lex
+lexeme (Lit _ lex)          = lex
+
+location :: Expr -> Text
+location = tshow . sourceLoc . lexeme 
+
+source :: Expr -> Text
+source = sourceCode . lexeme 
+
+data TypeError = MisMatch | NakedExpression Text Text | UnknownFunction Text deriving (Show, Eq)
 
 newtype TypeChecker a = TypeChecker {
   _runTypeChecker :: ExceptT TypeError (Reader [Expr]) a
@@ -34,7 +53,6 @@ newtype TypeChecker a = TypeChecker {
 
 runTypeChecker :: [Expr] -> TypeChecker Program -> Either TypeError Program
 runTypeChecker exprs = (flip runReader exprs) . runExceptT . _runTypeChecker
-
 
 data TypedFunction = TypedFunction {
     retStatement :: TypedExpr

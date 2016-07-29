@@ -7,10 +7,12 @@ import Types
 import Parser.Lexer(lexer)
 import Data.Functor((<$))
 import Control.Applicative((*>), (<*))
+import Text.Parsec(sourceLine, sourceName, getPosition)
 import Text.Parsec.Language(emptyDef)
 import qualified Text.Parsec as P
 import Control.Applicative((<|>))
-import Text.Parsec.Token(GenLanguageDef(..), GenTokenParser(..), makeTokenParser)
+import Text.Parsec.Token(GenLanguageDef, GenTokenParser, makeTokenParser)
+import qualified Text.Parsec.Token as Tok-- (GenLanguageDef(..), GenTokenParser(..), makeTokenParser)
 {-
   Grammar
   Expr       -> Def | Call | Assignment | Term
@@ -19,27 +21,44 @@ import Text.Parsec.Token(GenLanguageDef(..), GenTokenParser(..), makeTokenParser
 -}
 
 parse :: String -> Either P.ParseError [Expr]
-parse expr = P.parse parseTop "" expr
-
-parseTop :: Parsec String () [Expr]
-parseTop = many1 functionDeclaration
+parse expr = P.parse (many1 expression) "" expr
 
 expression :: Parsec String () Expr
-expression = (try assignment) <|> factor
+expression = (try functionDeclaration) <|> (try assignment) <|> factor
 
 factor :: Parsec String () Expr
 factor = try functionCall <|> term
 
 term :: Parsec String () Expr
-term = variable <|> digit <|> (StringLiteral . pack <$> stringLiteral lexer )
+term = variable <|> digit <|> stringLiteral
+
+getLexeme :: Parsec String () Lexeme
+getLexeme  = liftM2 Lexeme (sourceLine <$> getPosition) (pack . sourceName <$> getPosition)
+
+stringLiteral :: Parsec String () Expr
+stringLiteral = do
+  lex <- getLexeme 
+  lit <- pack <$> Tok.stringLiteral lexer
+  return $ Lit (StringLit lit) lex
+
+
+symbol :: String -> Parsec String () String
+symbol = Tok.symbol lexer
+
+parens :: Parsec String () a -> Parsec String () a
+parens = Tok.parens lexer
+
+commaSep :: Parsec String () a -> Parsec String () [a]
+commaSep = Tok.commaSep lexer
 
 addition :: Parsec String () Expr
 addition = do
+  lex <- getLexeme
   expr1 <- term
   spaces
-  symbol lexer "+"
+  symbol "+"
   expr2 <- expression
-  return $ Call "+" [expr1, expr2]
+  return $ Call "+" [expr1, expr2] lex
 
 functionCall :: Parsec String () Expr
 functionCall = try namedFunction <|> operatorFunction
@@ -49,28 +68,30 @@ functionCall = try namedFunction <|> operatorFunction
 
     namedFunction :: Parsec String () Expr
     namedFunction = do
-      fnName <- ident
-      fnArgs <- parens lexer $ commaSep lexer factor
-      return (Call fnName fnArgs)
+      lex <- getLexeme
+      fnName <- identifier
+      fnArgs <- parens $ commaSep factor 
+      return (Call fnName fnArgs lex) 
 
 functionDeclaration :: Parsec String () Expr
 functionDeclaration = do
-  reserved lexer "tydef"
-  name <- ident
+  lex <- getLexeme
+  Tok.reserved lexer "tydef"
+  name <- identifier
   atypes <- argTypes
-  reservedOp lexer "=>"
+  Tok.reservedOp lexer "=>"
   rt <- ftype
   newline
-  reservedOp lexer "fndef"
-  fnname <- ident
+  Tok.reservedOp lexer "fndef"
+  fnname <- identifier
 --TODO Check fn names match
-  varargs <- parens lexer varArguments
+  varargs <- parens varArguments
   body <- NE.fromList <$> (many space *> many1 expression <* many space)
-  reservedOp lexer "end"
-  return $ Function name atypes rt varargs body
+  Tok.reservedOp lexer "end"
+  return $ Function name atypes rt varargs body lex
 
 varArguments :: Parsec String () [Expr]
-varArguments = sepBy variable (symbol lexer ",")
+varArguments = sepBy variable (symbol ",")
 
 ftype :: Parsec String () Type
 ftype = intType <|> strType
@@ -81,23 +102,30 @@ ftype = intType <|> strType
     strType = String <$ string "String"
 
 argTypes :: Parsec String () [Type]
-argTypes = parens lexer ftypes
+argTypes = parens ftypes
 
 ftypes :: Parsec String () [Type]
-ftypes = commaSep lexer ftype
+ftypes = commaSep ftype
 
 assignment :: Parsec String () Expr
 assignment = do
+  lex <- getLexeme
   var <- variable
-  reservedOp lexer "="
+  Tok.reservedOp lexer "="
   assigned <- expression
-  return (Assignment var assigned)
+  return (Assignment var assigned lex)
 
 digit :: Parsec String () Expr
-digit = Digit . read <$> many1 P.digit
+digit = do 
+  lex <- getLexeme
+  digits <-  read <$> many1 P.digit
+  return $ Lit (Digit digits) lex
 
-ident :: Parsec String () Text
-ident = pack <$> identifier lexer
+identifier :: Parsec String () Text
+identifier = pack <$> Tok.identifier lexer
 
 variable :: Parsec String () Expr
-variable = Var <$> ident
+variable = do
+  lex <- getLexeme 
+  var <- identifier
+  return $ Var var lex

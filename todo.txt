@@ -1,2 +1,5 @@
 1. Make sure function name is same name as on type signature
+2. Use a hash for function lookup so we aren't traversing the [Expr] array
+n^2 times 
+
 
