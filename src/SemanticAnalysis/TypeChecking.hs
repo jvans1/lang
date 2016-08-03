@@ -13,6 +13,5 @@ import Base
                     {- Left $ "Function declared return type of " ++ tshow tyRetType ++ " but actually returned typed"  ++ tshow (typeOf retStatement) -}
                   {- else -}
                     {- return fn -}
-                
 {- typeOf :: TypedExpr -> Type -}
 {- typeOf = fst -}

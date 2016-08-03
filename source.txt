@@ -1,6 +1,6 @@
 tydef bar() => Integer
 fndef bar()
-  1
+  "Hideyho"
 end
 
 tydef hi() => Integer

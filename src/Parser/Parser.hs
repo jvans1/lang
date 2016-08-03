@@ -61,17 +61,14 @@ addition = do
   return $ Call "+" [expr1, expr2] lex
 
 functionCall :: Parsec String () Expr
-functionCall = try namedFunction <|> operatorFunction
+functionCall = try namedFunction
   where
-    operatorFunction :: Parsec String () Expr
-    operatorFunction = addition
-
     namedFunction :: Parsec String () Expr
     namedFunction = do
       lex <- getLexeme
       fnName <- identifier
-      fnArgs <- parens $ commaSep factor 
-      return (Call fnName fnArgs lex) 
+      fnArgs <- parens $ commaSep factor
+      return (Call fnName fnArgs lex)
 
 functionDeclaration :: Parsec String () Expr
 functionDeclaration = do

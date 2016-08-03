@@ -61,4 +61,3 @@ typeOfFn name ex = do
   case mfn of
     Just fn -> typeOf fn
     Nothing -> throwError $ UnknownFunction name (location ex)
-
