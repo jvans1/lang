@@ -1,12 +1,14 @@
 {-# LANGUAGE RecordWildCards #-}
 module SemanticAnalysis.TypeResolution(typeCheck) where
+import Debug.Trace(trace)
+import qualified Data.Text as T
 import Control.Monad.Extra(findM)
 import Control.Monad.Except(throwError)
 import Control.Monad.Reader(ask)
 import Data.Foldable(foldrM)
 import qualified Data.List.NonEmpty as NE
 import Types
-import Control.Monad.Writer.Lazy(tell, runWriter, Writer)
+import Control.Monad.Writer.Strict(tell, runWriter, Writer)
 import Control.Monad.State.Lazy(get)
 import Data.HashMap.Strict(mapWithKey)
 import Base hiding (mapWithKey)
@@ -15,12 +17,21 @@ typeAssignment :: TypeAssignment Program
 typeAssignment = get >>= foldrM addExplicitTypes empty
 
 parseTop :: [Expr] -> Writer [TypeError] (HashMap Text (Type, Expr))
-parseTop = error "parseTop"
+parseTop exprs = foldrM addTopLevelDeclarations empty $ reverse exprs 
+  where
+    addTopLevelDeclarations :: Expr -> HashMap Text (Type, Expr) -> Writer [TypeError] (HashMap Text (Type, Expr))
+    addTopLevelDeclarations fn@Function{..} hmap = do
+      case lookup fnName hmap of
+        Just _ -> tell [DuplicateDeclaration fnName fn] >> return hmap
+        Nothing -> return $ insert fnName (retType, fn) hmap
+    addTopLevelDeclarations expr hmap = tell [NakedExpression expr] >> return hmap
+  
+    
 
 typeCheck :: [Expr] -> Either [TypeError] Program
 typeCheck exprs =
   case runWriter (parseTop exprs) of
-    (fncts, []) ->  case assignTypes fncts typeAssignment of
+    (fncts, []) -> case assignTypes fncts typeAssignment of
                       Right p -> case runTypeChecker p typeChecker of
                                     (prgm, [])  ->  return prgm
                                     (_,  errs)  ->  Left errs
@@ -49,15 +60,16 @@ addFnType (ftype, Function{..}) = do
   let (returnStatement, mlist) = NE.uncons fnbody
   typedFnArgs         <- mapM assignType fnArgs
   fbody               <- fnBody mlist
+  rType <-  typeOf returnStatement
   return $ TypedFunction {
-            retStatement = (ftype, returnStatement)
+            retStatement = (rType, returnStatement)
             , typedFnName = fnName
             , tyfnArgTypes = fnArgTypes
             , tyRetType = retType
             , tyFnArgs = typedFnArgs
             , tyFnbody = fbody
          }
-addFnType a = error "this shouldn't happen, move to type representation"
+addFnType _ = throwError InvalidEntry
 
 fnBody :: Maybe (NonEmpty Expr) -> TypeAssignment [TypedExpr]
 fnBody (Just a) = mapM assignType $ NE.toList a

@@ -48,7 +48,7 @@ location = tshow . sourceLoc . lexeme
 source :: Expr -> Text
 source = sourceCode . lexeme 
 
-data TypeError = MisMatch Type TypedExpr | NakedExpression Text Text | UnknownFunction Text Text deriving (Show, Eq)
+data TypeError = DuplicateDeclaration Text Expr |  MisMatch Type TypedExpr | NakedExpression Expr | InvalidEntry | UnknownFunction Text Text deriving (Show, Eq)
 
 exprType :: TypedExpr -> Type
 exprType = fst
@@ -64,6 +64,7 @@ newtype TypeAssignment a = TypeAssignment {
 
 assignTypes :: HashMap Text (Type, Expr) -> TypeAssignment Program -> Either TypeError Program
 assignTypes exprs typeassignment = evalState (runExceptT $ runTypeAssignment typeassignment) exprs
+
 
 newtype TypeChecker a = TypeChecker {
    _runTypeChecker :: WriterT [TypeError] (Reader Program) a

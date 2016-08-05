@@ -19,6 +19,7 @@ main = do
 
 
 writeErr :: TypeError -> IO ()
-writeErr (NakedExpression lineno expr) = putStrLn $ lineno ++ " naked expression at top level: " ++ expr
+writeErr (NakedExpression expr) = putStrLn $ location expr ++ " naked expression at top level: " ++ tshow expr
 writeErr (UnknownFunction x lineno)    = putStrLn $ "Unknown function invocation on line: " ++ lineno ++ "; '" ++ x ++ "()' is not defined."
 writeErr (MisMatch type1 texpr)        = putStrLn $ "Type mismatch at line: " ++ (location $ expr texpr) ++  "\nexpected " ++ tshow type1 ++ " but got " ++ tshow (exprType texpr)
+writeErr (DuplicateDeclaration name expr)    = putStrLn $ "Duplicate declaration of " ++ name ++ " on " ++ location expr

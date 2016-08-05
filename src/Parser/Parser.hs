@@ -85,6 +85,7 @@ functionDeclaration = do
   varargs <- parens varArguments
   body <- NE.fromList <$> (many space *> many1 expression <* many space)
   Tok.reservedOp lexer "end"
+  many space
   return $ Function name atypes rt varargs body lex
 
 varArguments :: Parsec String () [Expr]
