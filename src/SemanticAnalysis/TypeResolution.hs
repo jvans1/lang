@@ -6,19 +6,26 @@ import Control.Monad.Reader(ask)
 import Data.Foldable(foldrM)
 import qualified Data.List.NonEmpty as NE
 import Types
-import Control.Monad.Writer.Lazy(tell)
+import Control.Monad.Writer.Lazy(tell, runWriter, Writer)
+import Control.Monad.State.Lazy(get)
 import Data.HashMap.Strict(mapWithKey)
 import Base hiding (mapWithKey)
 
 typeAssignment :: TypeAssignment Program
-typeAssignment = ask >>= foldrM addExplicitTypes empty
+typeAssignment = get >>= foldrM addExplicitTypes empty
+
+parseTop :: [Expr] -> Writer [TypeError] (HashMap Text (Type, Expr))
+parseTop = error "parseTop"
 
 typeCheck :: [Expr] -> Either [TypeError] Program
-typeCheck exprs = case assignTypes exprs typeAssignment of
+typeCheck exprs =
+  case runWriter (parseTop exprs) of
+    (fncts, []) ->  case assignTypes fncts typeAssignment of
                       Right p -> case runTypeChecker p typeChecker of
                                     (prgm, [])  ->  return prgm
                                     (_,  errs)  ->  Left errs
                       Left a -> Left [a]
+    (_, xs)    ->  Left xs
 
 logTypeMismatch :: Type -> TypedExpr -> TypeChecker ()
 logTypeMismatch type1 typedExpr@(type2, expr) = if type1 /= type2 then
@@ -32,26 +39,25 @@ typeChecker = do
     logTypeMismatch tyRetType retStatement
   return prgm
 
-addExplicitTypes :: Expr -> Program -> TypeAssignment Program
+addExplicitTypes :: (Type, Expr) -> Program -> TypeAssignment Program
 addExplicitTypes expr prgm = do
   fn <- addFnType expr
   return $ insert (typedFnName fn) fn prgm
 
-addFnType :: Expr -> TypeAssignment TypedFunction
-addFnType Function{..} = do
+addFnType :: (Type, Expr) -> TypeAssignment TypedFunction
+addFnType (ftype, Function{..}) = do
   let (returnStatement, mlist) = NE.uncons fnbody
-  returnStatementType <- assignType returnStatement
   typedFnArgs         <- mapM assignType fnArgs
   fbody               <- fnBody mlist
   return $ TypedFunction {
-            retStatement = returnStatementType
+            retStatement = (ftype, returnStatement)
             , typedFnName = fnName
             , tyfnArgTypes = fnArgTypes
             , tyRetType = retType
             , tyFnArgs = typedFnArgs
             , tyFnbody = fbody
          }
-addFnType a = throwError $ NakedExpression (location a) (source a)
+addFnType a = error "this shouldn't happen, move to type representation"
 
 fnBody :: Maybe (NonEmpty Expr) -> TypeAssignment [TypedExpr]
 fnBody (Just a) = mapM assignType $ NE.toList a
@@ -76,8 +82,8 @@ typeOf ex@(Call name _ _)            = typeOfFn name ex
 
 typeOfFn :: Text -> Expr -> TypeAssignment Type
 typeOfFn name ex = do
-  xs <- ask
-  mfn <- findM (isNamed name) xs
+  scope <- get
+  let mfn = lookup name scope
   case mfn of
-    Just fn -> typeOf fn
+    Just (_, fn) -> typeOf fn
     Nothing -> throwError $ UnknownFunction name (location ex)

@@ -1,7 +1,7 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE RecordWildCards #-}
 module Types where
-import Control.Monad.State.Lazy(MonadState, StateT, evalStateT)
+import Control.Monad.State.Lazy(MonadState, State, evalState)
 import Data.Text
 import Control.Monad.Reader
 import Control.Monad.Except
@@ -11,6 +11,7 @@ import Data.HashMap.Strict(HashMap)
 import Control.Monad.Writer.Lazy(MonadWriter, WriterT, runWriterT)
 
 data Type = Integer | String deriving (Show, Eq)
+
 
 data Expr = 
   Function {
@@ -55,12 +56,14 @@ exprType = fst
 expr :: TypedExpr -> Expr
 expr = snd
 
-newtype TypeAssignment a = TypeAssignment {
-  runTypeAssignment :: ExceptT TypeError (StateT [Expr] (Reader [Expr])) a
-} deriving (Functor, Applicative, Monad, MonadReader [Expr], MonadState [Expr], MonadError TypeError)
+type Scope = HashMap Text (Type, Expr)
 
-assignTypes :: [Expr] -> TypeAssignment Program -> Either TypeError Program
-assignTypes exprs typeassignment = (flip runReader exprs) $ evalStateT (runExceptT $ runTypeAssignment typeassignment) exprs
+newtype TypeAssignment a = TypeAssignment {
+  runTypeAssignment :: ExceptT TypeError (State Scope) a
+} deriving (Functor, Applicative, Monad, MonadState Scope, MonadError TypeError)
+
+assignTypes :: HashMap Text (Type, Expr) -> TypeAssignment Program -> Either TypeError Program
+assignTypes exprs typeassignment = evalState (runExceptT $ runTypeAssignment typeassignment) exprs
 
 newtype TypeChecker a = TypeChecker {
    _runTypeChecker :: WriterT [TypeError] (Reader Program) a
