@@ -3,7 +3,7 @@
 module Main where
 import Parser.Parser(parse)
 import Base
-import SemanticAnalysis.TypeResolution(typeChecker)
+import SemanticAnalysis.TypeResolution(typeCheck)
 import Types
 import System.Environment(getArgs)
 
@@ -11,9 +11,14 @@ main :: IO ()
 main = do
   f <- readFile "source.txt"
   case parse f of
-    Right program -> case runTypeChecker program typeChecker of
+    Right program -> case typeCheck program of
                         Right a -> print a
-                        Left (NakedExpression lineno expr)-> putStrLn $ lineno ++ "Naked Expression at top level: " ++ expr
-                        Left (UnknownFunction x lineno)-> putStrLn $ "Unknown function invocation on line: " ++ lineno ++ "; '" ++ x ++ "()' is not defined."
+                        Left xs -> mapM_ writeErr xs
 
     Left failure -> print failure
+
+
+writeErr :: TypeError -> IO ()
+writeErr (NakedExpression lineno expr) = putStrLn $ lineno ++ " naked expression at top level: " ++ expr
+writeErr (UnknownFunction x lineno)    = putStrLn $ "Unknown function invocation on line: " ++ lineno ++ "; '" ++ x ++ "()' is not defined."
+writeErr (MisMatch type1 texpr)        = putStrLn $ "Type mismatch at line: " ++ (location $ expr texpr) ++  "\nexpected " ++ tshow type1 ++ " but got " ++ tshow (exprType texpr)

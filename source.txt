@@ -1,9 +1,4 @@
-tydef bar() => Integer
-fndef bar()
-  "Hideyho"
-end
-
-tydef hi() => Integer
-fndef hi()
-  bar()
+tydef bar(String) => Integer
+fndef bar(a)
+  a
 end
