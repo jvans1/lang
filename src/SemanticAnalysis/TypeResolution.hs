@@ -36,12 +36,6 @@ assignTypes exprs = case runTypeAssignment exprs of
                           (pgrm, [])  -> return pgrm
                           (_, xs)     -> Left xs
 
-{- case runTypeAssignment exprs of -}
-                      {- (typedFn, []) -> -}
-{- case evalState (runWriterT $ runTypeAssignment typeAssignment) exprs of -}
-                      {- (prgm, []) -> Right prgm -}
-                      {- (_, errs)    -> Left errs -}
-
 parseTop :: [Expr] -> Either [TypeError] (HashMap Text (Type, Expr))
 parseTop exprs = 
   case runWriter (assignFnTypes exprs) of
@@ -96,8 +90,6 @@ assignType ex = do
       Just ttype -> return $ Just (ttype, ex)
       Nothing -> return Nothing
 
-isNamed :: Text -> Expr -> TypeAssignment Bool
-isNamed name Function{..} = return $ fnName == name
 --TODO: Account for invalid top level declarations here and short circuit
 --If we have a TLD that is not a function this will fail 
 

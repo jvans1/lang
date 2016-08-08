@@ -1,27 +1,27 @@
 {-# LANGUAGE RecordWildCards #-}
 
-module SemanticAnalysis.TypeChecking where
+module SemanticAnalysis.TypeChecking(typeCheck) where
+import Control.Monad.Writer.Lazy(tell, runWriter, Writer)
 import SemanticAnalysis.TypeResolution
 import Control.Monad.Writer.Strict(tell)
 import Types
 import Base
 
 typeCheck :: [Expr] -> Either [TypeError] Program
-typeCheck exprs = case parseTop exprs >>= assignTypes of
-                      Right p -> case runTypeChecker p typeChecker of
-                                    (prgm, [])  ->  return prgm
-                                    (_,  errs)  ->  Left errs
-                      Left a -> Left a
+typeCheck exprs = parseTop exprs >>= assignTypes >>= runTypeChecker
 
-
-logTypeMismatch :: Type -> TypedExpr -> TypeChecker ()
+logTypeMismatch :: Type -> TypedExpr -> Writer [TypeError] ()
 logTypeMismatch type1 typedExpr@(type2, expr) = if type1 /= type2 then
                                         tell $ [MisMatch type1 typedExpr]
                                       else return ()
 
-typeChecker :: TypeChecker Program
-typeChecker = do
-  prgm <- ask
+logTypeErrors :: Program -> Writer [TypeError] Program
+logTypeErrors prgm = do
   forM_ prgm $ \TypedFunction {..} -> do
     logTypeMismatch tyRetType retStatement
   return prgm
+
+runTypeChecker :: Program -> Either [TypeError] Program
+runTypeChecker prgm = case runWriter (logTypeErrors prgm) of
+                          (prgm, [])  ->  return prgm
+                          (_,  errs)  ->  Left errs

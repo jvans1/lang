@@ -58,13 +58,6 @@ expr = snd
 
 type Scope = HashMap Text (Type, Expr)
 
-newtype TypeChecker a = TypeChecker {
-   _runTypeChecker :: WriterT [TypeError] (Reader Program) a
-} deriving (Functor, Applicative, Monad, MonadWriter [TypeError], MonadReader Program)
-
-runTypeChecker :: Program -> TypeChecker Program -> (Program, [TypeError])
-runTypeChecker prgm tycheck = flip runReader prgm $ runWriterT (_runTypeChecker tycheck)
-
 data TypedFunction = TypedFunction {
     retStatement :: TypedExpr
   , typedFnName :: Text
