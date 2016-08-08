@@ -60,23 +60,28 @@ addExplicitTypes expr prgm = do
     Just fn -> return $ insert (typedFnName fn) fn prgm
     Nothing -> return prgm
 
+makeTypedFn :: Expr -> [Maybe TypedExpr] -> [Maybe TypedExpr] -> Maybe Type -> Maybe TypedFunction
+makeTypedFn Function{..} margs mbody mretType = do
+  let (returnStatement, mlist) = NE.uncons fnbody
+  args <- sequence margs
+  body <- sequence mbody
+  rType <- mretType
+  return TypedFunction {
+        retStatement = (rType, returnStatement)
+        , typedFnName = fnName
+        , tyfnArgTypes = fnArgTypes
+        , tyRetType = retType
+        , tyFnArgs = args
+        , tyFnbody = body
+     }
+
 addFnType :: (Type, Expr) -> TypeAssignment (Maybe TypedFunction)
-addFnType (ftype, Function{..}) = error "addFnType"
-  {- let (returnStatement, mlist) = NE.uncons fnbody -}
-  {- typedFnArgs         <- mapM assignType fnArgs -}
-  {- fbody               <- fnBody mlist -}
-  {- mrType <-  typeOf returnStatement -}
-  {- case mrType of -}
-    {- Just rType -> return . Just $ TypedFunction { -}
-            {- retStatement = (rType, returnStatement) -}
-            {- , typedFnName = fnName -}
-            {- , tyfnArgTypes = fnArgTypes -}
-            {- , tyRetType = retType -}
-            {- , tyFnArgs = typedFnArgs -}
-            {- , tyFnbody = fbody -}
-         {- } -}
-    {- Nothing ->  return Nothing -}
-    --TOOO: error message here?
+addFnType (ftype, fn@Function{..}) = do
+  let (returnStatement, mlist) = NE.uncons fnbody
+  mtypedFnArgs         <- mapM assignType fnArgs
+  mfbody               <- fnBody mlist
+  mrType <-  typeOf returnStatement
+  return $ makeTypedFn fn mtypedFnArgs mfbody mrType
 addFnType _ = tell [InvalidEntry] >> return Nothing
 
 fnBody :: Maybe (NonEmpty Expr) -> TypeAssignment [Maybe TypedExpr]
