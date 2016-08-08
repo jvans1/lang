@@ -20,6 +20,7 @@ library
                         Parser.Parser
                       , SemanticAnalysis.TypeResolution
                       , SemanticAnalysis.TypeChecking
+                      , SemanticAnalysis.TopLevelParsing
                       , Parser.Lexer
                       , Types
                       , Base

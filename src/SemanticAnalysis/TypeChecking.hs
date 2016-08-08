@@ -4,6 +4,7 @@ module SemanticAnalysis.TypeChecking(typeCheck) where
 import Control.Monad.Writer.Lazy(tell, runWriter, Writer)
 import SemanticAnalysis.TypeResolution
 import Control.Monad.Writer.Strict(tell)
+import SemanticAnalysis.TopLevelParsing(parseTop)
 import Types
 import Base
 

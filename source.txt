@@ -1,5 +1,5 @@
-tydef baz(String) => Integer
-fndef baz(a)
-  a
+tydef bax() => String
+fndef bax()
+  "HIII"
 end 
 

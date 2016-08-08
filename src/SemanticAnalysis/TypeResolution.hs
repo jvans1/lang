@@ -1,6 +1,6 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE RecordWildCards #-}
-module SemanticAnalysis.TypeResolution(parseTop, assignTypes) where
+module SemanticAnalysis.TypeResolution(assignTypes) where
 import Control.Monad.State.Lazy(MonadState, State, evalState)
 import Debug.Trace(trace)
 import qualified Data.Text as T
@@ -36,22 +36,6 @@ assignTypes exprs = case runTypeAssignment exprs of
                           (pgrm, [])  -> return pgrm
                           (_, xs)     -> Left xs
 
-parseTop :: [Expr] -> Either [TypeError] (HashMap Text (Type, Expr))
-parseTop exprs = 
-  case runWriter (assignFnTypes exprs) of
-    (fncts, []) -> Right fncts
-    (_, xs)     -> Left xs
-
-assignFnTypes :: [Expr] -> Writer [TypeError] (HashMap Text (Type, Expr))
-assignFnTypes exprs = foldrM addTopLevelDeclarations empty $ reverse exprs 
-  where
-    addTopLevelDeclarations :: Expr -> HashMap Text (Type, Expr) -> Writer [TypeError] (HashMap Text (Type, Expr))
-    addTopLevelDeclarations fn@Function{..} hmap = do
-      case lookup fnName hmap of
-        Just _ -> tell [DuplicateDeclaration fnName fn] >> return hmap
-        Nothing -> return $ insert fnName (retType, fn) hmap
-    addTopLevelDeclarations expr hmap = tell [NakedExpression expr] >> return hmap
-  
 
 addExplicitTypes :: (Type, Expr) -> Program -> TypeAssignment Program
 addExplicitTypes expr prgm = do
@@ -97,7 +81,6 @@ assignType ex = do
 
 --TODO: Account for invalid top level declarations here and short circuit
 --If we have a TLD that is not a function this will fail 
-
 typeOf :: Expr -> TypeAssignment (Maybe Type)
 typeOf ex@(Assignment expr1 expr2 _) = typeOf expr2
 typeOf ex@(Function{..})             = return (Just retType)
