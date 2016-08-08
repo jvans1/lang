@@ -1,7 +1,7 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE RecordWildCards #-}
 module SemanticAnalysis.TypeResolution(assignTypes) where
-import Control.Monad.State.Lazy(MonadState, State, evalState)
+import Control.Monad.State.Lazy(MonadState, State, evalState, withState, get, put, modify)
 import Debug.Trace(trace)
 import qualified Data.Text as T
 import Control.Monad.Extra(findM)
@@ -16,6 +16,12 @@ import Data.HashMap.Strict(mapWithKey)
 import Base hiding (mapWithKey)
 import Control.Monad.Writer.Lazy(MonadWriter, WriterT, runWriterT)
 
+assignTypes :: HashMap Text (Type, Expr) ->  Either [TypeError] Program
+assignTypes exprs = case runTypeAssignment exprs of
+                          (pgrm, [])  -> Right pgrm
+                          (_, xs)     -> Left xs
+
+
 typeAssignment :: TypeAssignment Program
 typeAssignment = get >>= foldrM addExplicitTypes empty
 
@@ -25,17 +31,6 @@ newtype TypeAssignment a = TypeAssignment {
 
 runTypeAssignment :: HashMap Text (Type, Expr) -> (Program, [TypeError])
 runTypeAssignment scope = flip evalState scope (runWriterT (_runTypeAssignment typeAssignment))
-
---TODO:This should always be a function due to the previous step
---but it is still an incomplete function. Should try
---to represent that this is always a function on the type level
---GADT's seem to lead to too much complexity atm
-
-assignTypes :: HashMap Text (Type, Expr) ->  Either [TypeError] Program
-assignTypes exprs = case runTypeAssignment exprs of
-                          (pgrm, [])  -> return pgrm
-                          (_, xs)     -> Left xs
-
 
 addExplicitTypes :: (Type, Expr) -> Program -> TypeAssignment Program
 addExplicitTypes expr prgm = do
@@ -59,14 +54,32 @@ makeTypedFn Function{..} margs mbody mretType = do
         , tyFnbody = body
      }
 
+withLocalScope :: [TypedExpr] -> TypeAssignment a -> TypeAssignment a 
+withLocalScope localScope expr = do
+  oldState <- get
+  modify (addArgs localScope)
+  result <- expr
+  put oldState
+  return result
+
+
 addFnType :: (Type, Expr) -> TypeAssignment (Maybe TypedFunction)
 addFnType (ftype, fn@Function{..}) = do
   let (returnStatement, mlist) = NE.uncons fnbody
-  mtypedFnArgs         <- mapM assignType fnArgs
-  mfbody               <- fnBody mlist
-  mrType <-  typeOf returnStatement
-  return $ makeTypedFn fn mtypedFnArgs mfbody mrType
+  withLocalScope (zip fnArgTypes fnArgs) $ do
+    mtypedFnArgs         <- mapM assignType fnArgs
+    mfbody               <- fnBody mlist
+    mrType <-  typeOf returnStatement
+    return $ makeTypedFn fn mtypedFnArgs mfbody mrType
+--This shouldn't happen, lets enforce this on the type level
 addFnType _ = tell [InvalidEntry] >> return Nothing
+
+
+addArgs :: [TypedExpr] -> Scope -> Scope
+addArgs exprs oldState = foldl' addToScope oldState exprs 
+  where
+    addToScope :: Scope -> TypedExpr -> Scope
+    addToScope scope tExpr@(_, Var name _) = insert name tExpr scope
 
 fnBody :: Maybe (NonEmpty Expr) -> TypeAssignment [Maybe TypedExpr]
 fnBody (Just a) = mapM assignType $ NE.toList a
@@ -79,14 +92,16 @@ assignType ex = do
       Just ttype -> return $ Just (ttype, ex)
       Nothing -> return Nothing
 
---TODO: Account for invalid top level declarations here and short circuit
---If we have a TLD that is not a function this will fail 
 typeOf :: Expr -> TypeAssignment (Maybe Type)
 typeOf ex@(Assignment expr1 expr2 _) = typeOf expr2
 typeOf ex@(Function{..})             = return (Just retType)
 typeOf ex@(Lit (StringLit _) _)      = return (Just String)
 typeOf ex@(Lit (Digit _) _)          = return (Just Integer)
-typeOf ex@(Var _ _)                  = return (Just Integer)
+typeOf ex@(Var name lex)               = do
+  mType <- fmap fst . lookup name <$> get
+  case mType of
+    Nothing -> tell [UndefinedVariable name ex] >> return Nothing
+    a -> return a
 typeOf ex@(Call name _ _)            = typeOfFn name ex
 
 typeOfFn :: Text -> Expr -> TypeAssignment (Maybe Type)

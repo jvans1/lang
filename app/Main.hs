@@ -23,3 +23,4 @@ writeErr (NakedExpression expr) = putStrLn $ location expr ++ " naked expression
 writeErr (UnknownFunction x lineno)    = putStrLn $ "Unknown function invocation on line: " ++ lineno ++ "; '" ++ x ++ "()' is not defined."
 writeErr (MisMatch type1 texpr)        = putStrLn $ "Type mismatch at line: " ++ (location $ expr texpr) ++  "\nexpected " ++ tshow type1 ++ " but got " ++ tshow (exprType texpr)
 writeErr (DuplicateDeclaration name expr)    = putStrLn $ "Duplicate declaration of " ++ name ++ " on " ++ location expr
+writeErr (UndefinedVariable name expr)    = putStrLn $ "Undefined variable: " ++ name ++ " on " ++ location expr

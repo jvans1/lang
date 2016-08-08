@@ -48,7 +48,7 @@ location = tshow . sourceLoc . lexeme
 source :: Expr -> Text
 source = sourceCode . lexeme 
 
-data TypeError = DuplicateDeclaration Text Expr |  MisMatch Type TypedExpr | NakedExpression Expr | InvalidEntry | UnknownFunction Text Text deriving (Show, Eq)
+data TypeError = DuplicateDeclaration Text Expr |  MisMatch Type TypedExpr | NakedExpression Expr | InvalidEntry | UnknownFunction Text Text | UndefinedVariable Text Expr deriving (Show, Eq)
 
 exprType :: TypedExpr -> Type
 exprType = fst
