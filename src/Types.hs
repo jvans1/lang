@@ -58,14 +58,6 @@ expr = snd
 
 type Scope = HashMap Text (Type, Expr)
 
-newtype TypeAssignment a = TypeAssignment {
-  runTypeAssignment :: ExceptT TypeError (State Scope) a
-} deriving (Functor, Applicative, Monad, MonadState Scope, MonadError TypeError)
-
-assignTypes :: HashMap Text (Type, Expr) -> TypeAssignment Program -> Either TypeError Program
-assignTypes exprs typeassignment = evalState (runExceptT $ runTypeAssignment typeassignment) exprs
-
-
 newtype TypeChecker a = TypeChecker {
    _runTypeChecker :: WriterT [TypeError] (Reader Program) a
 } deriving (Functor, Applicative, Monad, MonadWriter [TypeError], MonadReader Program)

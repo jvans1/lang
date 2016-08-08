@@ -3,7 +3,7 @@
 module Main where
 import Parser.Parser(parse)
 import Base
-import SemanticAnalysis.TypeResolution(typeCheck)
+import SemanticAnalysis.TypeChecking(typeCheck)
 import Types
 import System.Environment(getArgs)
 

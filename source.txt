@@ -1,15 +1,5 @@
-tydef bar() => String
-fndef bar()
-  "HI"
-end 
-
-tydef bar() => Integer
-fndef bar()
-  1
-end 
-
-tydef baz() => String
-fndef baz()
-  "HI"
+tydef baz(String) => Integer
+fndef baz(a)
+  a
 end 
 
