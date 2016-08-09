@@ -9,7 +9,7 @@ import Types
 import Base
 
 typeCheck :: [Expr] -> Either [TypeError] Program
-typeCheck exprs = parseTop exprs >>= assignTypes >>= runTypeChecker
+typeCheck exprs = parseTop exprs >>= fn0 >>= runTypeChecker
 
 logTypeMismatch :: Type -> TypedExpr -> Writer [TypeError] ()
 logTypeMismatch type1 typedExpr@(type2, expr) = if type1 /= type2 then

@@ -12,6 +12,13 @@ import Control.Monad.Writer.Lazy(MonadWriter, WriterT, runWriterT)
 
 data Type = Integer | String deriving (Show, Eq)
 
+data TypedFunction = TypedFunction {
+    retStatement :: TypedExpr
+  , typedFnName :: Text
+  , tyRetType :: Type
+  , tyFnArgs :: [TypedExpr]
+  , tyFnbody :: [TypedExpr]
+} deriving (Show, Eq)
 
 data Expr = 
   Function {
@@ -48,7 +55,13 @@ location = tshow . sourceLoc . lexeme
 source :: Expr -> Text
 source = sourceCode . lexeme 
 
-data TypeError = DuplicateDeclaration Text Expr |  MisMatch Type TypedExpr | NakedExpression Expr | InvalidEntry | UnknownFunction Text Text | UndefinedVariable Text Expr deriving (Show, Eq)
+data TypeError = 
+    DuplicateDeclaration Text Expr 
+    |  MisMatch Type TypedExpr 
+    | NakedExpression Expr 
+    | InvalidEntry 
+    | UnknownFunction Text Text 
+    | UndefinedVariable Text Expr deriving (Show, Eq)
 
 exprType :: TypedExpr -> Type
 exprType = fst
@@ -57,15 +70,6 @@ expr :: TypedExpr -> Expr
 expr = snd
 
 type Scope = HashMap Text (Type, Expr)
-
-data TypedFunction = TypedFunction {
-    retStatement :: TypedExpr
-  , typedFnName :: Text
-  , tyfnArgTypes :: [Type]
-  , tyRetType :: Type
-  , tyFnArgs :: [TypedExpr]
-  , tyFnbody :: [TypedExpr]
-} deriving (Show, Eq)
 
 type TypedExpr = (Type, Expr)
 
