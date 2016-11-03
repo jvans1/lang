@@ -38,7 +38,7 @@ assignFnType (ftype, Function{..}) = do
         , tyFnArgs = error "tyFnArgs"
       }
     Nothing -> return Nothing
-    
+
 typeOf :: Expr -> ReaderT Scope (Writer [TypeError]) (Maybe (Type, Expr))
 typeOf ex@(Assignment expr1 expr2 _) = typeOf expr2
 typeOf ex@(Function{..})             = return $ Just (retType, ex)

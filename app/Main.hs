@@ -15,7 +15,7 @@ main = do
                         Right a -> print a
                         Left xs -> mapM_ writeErr xs
 
-    Left failure -> print failure
+    Left failure -> putStrLn "Failure" >> print failure
 
 
 writeErr :: TypeError -> IO ()
