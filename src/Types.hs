@@ -20,12 +20,12 @@ data TypedFunction = TypedFunction {
   , tyFnbody :: [TypedExpr]
 } deriving (Show, Eq)
 
-data Expr = 
+data Expr =
   Function {
-        fnName :: Text 
-      , fnArgTypes :: [Type] 
-      , retType :: Type 
-      , fnArgs :: [Expr] 
+        fnName :: Text
+      , fnArgTypes :: [Type]
+      , retType :: Type
+      , fnArgs :: [Expr]
       , fnbody :: NonEmpty Expr
       , _lexeme :: Lexeme
     }
@@ -38,7 +38,7 @@ data Lit = StringLit Text | Digit Integer deriving (Show, Eq)
 
 data Lexeme = Lexeme {
     sourceLoc :: Int
-  , sourceCode :: Text 
+  , sourceCode :: Text
 } deriving (Show, Eq)
 
 
@@ -50,17 +50,17 @@ lexeme (Var _ lex)          = lex
 lexeme (Lit _ lex)          = lex
 
 location :: Expr -> Text
-location = tshow . sourceLoc . lexeme 
+location = tshow . sourceLoc . lexeme
 
 source :: Expr -> Text
-source = sourceCode . lexeme 
+source = sourceCode . lexeme
 
-data TypeError = 
-    DuplicateDeclaration Text Expr 
-    |  MisMatch Type TypedExpr 
-    | NakedExpression Expr 
-    | InvalidEntry 
-    | UnknownFunction Text Text 
+data TypeError =
+    DuplicateDeclaration Text Expr
+    |  MisMatch Type TypedExpr
+    | NakedExpression Expr
+    | InvalidEntry
+    | UnknownFunction Text Text
     | UndefinedVariable Text Expr deriving (Show, Eq)
 
 exprType :: TypedExpr -> Type

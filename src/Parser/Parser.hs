@@ -21,10 +21,10 @@ import qualified Text.Parsec.Token as Tok-- (GenLanguageDef(..), GenTokenParser(
 -}
 
 parse :: String -> Either P.ParseError [Expr]
-parse expr = P.parse (many1 expression) "" expr
+parse expr = P.parse (many1 functionDeclaration) "" expr
 
 expression :: Parsec String () Expr
-expression = (try functionDeclaration) <|> (try assignment) <|> factor
+expression = try assignment <|> factor
 
 factor :: Parsec String () Expr
 factor = try functionCall <|> term
@@ -37,7 +37,7 @@ getLexeme  = liftM2 Lexeme (sourceLine <$> getPosition) (pack . sourceName <$> g
 
 stringLiteral :: Parsec String () Expr
 stringLiteral = do
-  lex <- getLexeme 
+  lex <- getLexeme
   lit <- pack <$> Tok.stringLiteral lexer
   return $ Lit (StringLit lit) lex
 
@@ -114,7 +114,7 @@ assignment = do
   return (Assignment var assigned lex)
 
 digit :: Parsec String () Expr
-digit = do 
+digit = do
   lex <- getLexeme
   digits <-  read <$> many1 P.digit
   return $ Lit (Digit digits) lex
@@ -124,6 +124,6 @@ identifier = pack <$> Tok.identifier lexer
 
 variable :: Parsec String () Expr
 variable = do
-  lex <- getLexeme 
+  lex <- getLexeme
   var <- identifier
   return $ Var var lex
