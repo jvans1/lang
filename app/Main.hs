@@ -3,6 +3,7 @@
 module Main where
 import Parser.Parser(parse)
 import Base
+import CodeGeneration.CGenerator(generate)
 import SemanticAnalysis.TypeChecking(typeCheck)
 import Types
 import System.Environment(getArgs)
@@ -12,7 +13,7 @@ main = do
   f <- readFile "source.txt"
   case parse f of
     Right program -> case typeCheck program of
-                        Right a -> print a
+                        Right a -> putStrLn $ generate a
                         Left xs -> mapM_ writeErr xs
 
     Left failure -> putStrLn "Failure" >> print failure

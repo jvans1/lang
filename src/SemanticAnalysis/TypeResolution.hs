@@ -10,9 +10,10 @@ import Control.Monad.Writer.Lazy(tell, runWriter, Writer, runWriterT)
 import Control.Monad.Reader(MonadReader)
 import Base hiding (mapWithKey)
 import Control.Monad.Writer.Lazy(MonadWriter, WriterT, runWriterT)
+import Data.Maybe(fromJust)
 
 toProg :: HashMap Text (Maybe TypedFunction) -> HashMap Text TypedFunction
-toProg = error "do"
+toProg = fmap fromJust
 
 fn0 :: HashMap Text (Type, Expr) ->  Either [TypeError] Program
 fn0 exprs = case runWriter (fnn exprs) of
@@ -29,12 +30,12 @@ assignFnType :: (Type, Expr) -> ReaderT Scope (Writer [TypeError]) (Maybe TypedF
 assignFnType (ftype, Function{..}) = do
   mbody <- sequence <$> mapM typeOf fnbody
   case mbody of
-    Just (a :| xs) -> do
+    Just all@(a :| xs) -> do
       return . Just $ TypedFunction {
         retStatement = a
         , typedFnName = fnName
         , tyRetType = retType
-        , tyFnbody = xs
+        , tyFnbody = a:xs
         , tyFnArgs = error "tyFnArgs"
       }
     Nothing -> return Nothing
