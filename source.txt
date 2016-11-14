@@ -1,8 +1,3 @@
-tydef baa(String) => Integer
-fndef baa(a)
-  1
-end 
-
 tydef baz(Integer, Integer) => Integer
 fndef baz(a, b)
   1 + 2

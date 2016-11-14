@@ -21,6 +21,7 @@ library
                       , SemanticAnalysis.TypeResolution
                       , SemanticAnalysis.TypeChecking
                       , SemanticAnalysis.TopLevelParsing
+                      , CodeGeneration.CGenerator
                       , Parser.Lexer
                       , Types
                       , Base
